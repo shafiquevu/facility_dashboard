@@ -95,7 +95,12 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
         </TableShell>
       ) : (
         <div className="px-5 pb-5">
-          <Empty title="No documents on file yet">Reports arrive through completion links, certificates through the insurance page, and repair proof on each work order.</Empty>
+          <Empty title="No documents on file yet">
+            To add a past report, open the inspection from{" "}
+            <Link href="/recurring" className="font-medium text-brand hover:underline">Recurring maintenance</Link> or{" "}
+            <Link href="/approvals" className="font-medium text-brand hover:underline">Approvals</Link> and use
+            Inspection history: enter the date and attach the PDF. Reports also arrive through completion links.
+          </Empty>
         </div>
       )}
     </Section>
