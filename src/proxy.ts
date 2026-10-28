@@ -48,6 +48,8 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+// /i/... is the completion link vendors open from a reminder: no login, its
+// signed token is checked by hangar.
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  matcher: ["/((?!api|i/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };
