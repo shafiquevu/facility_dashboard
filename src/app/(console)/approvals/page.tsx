@@ -74,7 +74,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
         {imported.length ? (
           <ul className="divide-y divide-line border-t border-line">
             {imported.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+              <li key={p.id} className="grid gap-3 px-5 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                 <div className="min-w-0">
                   <Link href={`/work-orders/item/${p.id}`} className="text-[13px] font-medium hover:text-brand">{p.item}</Link>
                   <p className="text-xs text-graphite">
@@ -94,7 +94,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
         {proposed.length ? (
           <ul className="divide-y divide-line border-t border-line">
             {proposed.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+              <li key={p.id} className="grid gap-3 px-5 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                 <div className="min-w-0">
                   <Link href={`/work-orders/item/${p.id}`} className="text-[13px] font-medium hover:text-brand">{p.item}</Link>
                   <p className="text-xs text-graphite">

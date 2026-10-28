@@ -9,8 +9,8 @@ export function ProposedItemForms({ id, nextDue, imported, meta }: {
   id: string; nextDue: string | null; imported: boolean; meta: Meta;
 }) {
   return (
-    <div className="flex flex-wrap items-start gap-2">
-      <ActionForm action={approveProposedItem} className="flex flex-wrap items-start gap-2">
+    <div className="flex flex-wrap items-start gap-2 lg:flex-nowrap lg:justify-end">
+      <ActionForm action={approveProposedItem} className="flex flex-wrap items-start gap-2 lg:flex-nowrap">
         <input type="hidden" name="id" value={id} />
         <TextInput name="next_due" type="date" defaultValue={nextDue ?? ""} required aria-label="Due date" title="The date the inspection is due" className="w-40" />
         {/* Reminders go to this person 30, 14 and 7 days before the due date and on it. */}
