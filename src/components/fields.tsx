@@ -52,11 +52,11 @@ export function LocationSelect({ meta, id = "location_id", value, store, require
   );
 }
 
-export function PersonSelect({ meta, id, name, value, empty = "Nobody" }: {
-  meta: Meta; id: string; name: string; value?: string | null; empty?: string;
+export function PersonSelect({ meta, id, name, value, empty = "Nobody", required }: {
+  meta: Meta; id: string; name: string; value?: string | null; empty?: string; required?: boolean;
 }) {
   return (
-    <Select id={id} name={name} defaultValue={value ?? ""}>
+    <Select id={id} name={name} defaultValue={value ?? ""} required={required} aria-label={empty}>
       <option value="">{empty}</option>
       {meta.people.map((p) => (
         <option key={p.id} value={p.id}>{p.name}</option>

@@ -45,14 +45,15 @@ async function Content() {
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-ink text-[11px] font-semibold text-white">{s.short_code}</span>
                 <div className="min-w-0">
                   <Link href={`/?store=${s.short_code}`} className="block text-[14px] font-semibold hover:text-brand">{storeLabel(s.name)}</Link>
-                  <span className="block truncate text-xs text-graphite">{s.name}</span>
+                  <span className="block text-xs text-graphite">{s.address ?? "No address on file"}</span>
                 </div>
               </div>
               <ul className="space-y-0.5 text-[13px]">
                 {buildings.map((b) => (
                   <li key={b.id} className="truncate">
                     {b.building}
-                    {b.address && <span className="text-graphite">, {b.address}</span>}
+                    {/* only a building with an address of its own; otherwise it is the store's */}
+                    {b.address && b.address !== s.address && <span className="text-graphite">, {b.address}</span>}
                   </li>
                 ))}
               </ul>

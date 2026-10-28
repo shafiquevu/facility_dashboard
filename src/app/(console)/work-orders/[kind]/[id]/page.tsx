@@ -7,7 +7,7 @@ import { dateTime, day, dueLabel, money, verb, words } from "@/lib/format";
 import { access, attempt } from "@/lib/page";
 import { NoAccess } from "@/components/no-access";
 import { Chip, Empty, ErrorState, Loading, PriorityLabel, Section, WorkOrderStatus } from "@/components/kit";
-import { AssignForm, CopyLink, DecisionForm, RequestUpload, VerifyForm } from "./forms";
+import { AssignForm, AttachReportForm, CopyLink, DecisionForm, RecordInspectionForm, RequestUpload, VerifyForm } from "./forms";
 
 export default function WorkOrderPage({ params }: { params: Promise<{ kind: string; id: string }> }) {
   return (
@@ -58,8 +58,8 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
   return (
     <>
       <nav className="mb-3 flex items-center gap-1 text-[13px] text-graphite" aria-label="Breadcrumb">
-        <Link href={o.kind === "item" ? "/recurring" : "/work-requests"} className="hover:text-ink">
-          {o.kind === "item" ? "Recurring maintenance" : "Work requests"}
+        <Link href={o.kind === "item" ? (o.live === false ? "/approvals" : "/recurring") : "/work-requests"} className="hover:text-ink">
+          {o.kind === "item" ? (o.live === false ? "Approvals" : "Recurring maintenance") : "Work requests"}
         </Link>
         <ChevronRight className="size-3.5 text-faint" />
         <span className="num text-ink">{o.number}</span>
@@ -73,6 +73,7 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
             {o.kind === "request" ? <span className="text-[13px] text-graphite">{words(o.urgency)} repair</span>
               : o.category.toLowerCase() !== o.title.toLowerCase() && <span className="text-[13px] text-graphite">{o.category}</span>}
             {o.critical && <Chip tone="overdue">Critical</Chip>}
+            {o.live === false && <Chip tone="neutral">Not started yet</Chip>}
           </div>
         </div>
       </header>
@@ -93,6 +94,48 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
               </div>
             ))}
           </section>
+
+          {o.kind === "item" && (
+            <Section
+              title="Inspection history"
+              description="Past inspections and their reports, kept for reference. Record this year's here, with the PDF."
+              flush
+            >
+              {o.records?.length ? (
+                <ul className="divide-y divide-line border-t border-line">
+                  {o.records.map((r) => (
+                    <li key={r.id} className="px-5 py-3.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="num text-[14px] font-semibold text-ink">{day(r.completed_on)}</span>
+                        <Chip tone={r.result === "failed" ? "overdue" : r.result === "passed" ? "verified" : "soon"}>{words(r.result)}</Chip>
+                        {r.vendor && <span className="text-[13px] text-graphite">{r.vendor}</span>}
+                      </div>
+                      {r.notes && <p className="mt-1 text-[13px] whitespace-pre-line text-ink">{r.notes}</p>}
+                      <p className="mt-1 text-xs text-faint">Recorded by {r.recorded_by}, {dateTime(r.created_at)}</p>
+                      {r.documents.length ? (
+                        <ul className="mt-2 flex flex-wrap gap-2">
+                          {r.documents.map((d, i) => (
+                            <li key={i}>
+                              {d.url && (
+                                <a href={d.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-[13px] font-medium text-brand hover:bg-surface-sunk">
+                                  <FileText className="size-3.5" /> {words(d.kind)} <ExternalLink className="size-3" />
+                                </a>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <AttachReportForm id={o.id} recordId={r.id} />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="px-5 pb-4"><Empty title="No past inspections recorded">Add this year&apos;s below: the date, the result and the PDF report.</Empty></div>
+              )}
+              <RecordInspectionForm id={o.id} meta={meta} />
+            </Section>
+          )}
 
           <Section
             title="Documents"

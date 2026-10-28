@@ -40,16 +40,16 @@ function StoreSwitcher({ stores }: { stores: Store[] }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg border border-line bg-surface px-2.5 py-2 text-left hover:border-line-strong">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-ink text-[11px] font-semibold text-white">
+        <span className="flex h-7 min-w-7 shrink-0 items-center justify-center rounded-md bg-ink px-1.5 text-[11px] font-semibold text-white">
           {current ? current.short_code : "All"}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-semibold text-ink">{current ? storeLabel(current.name) : "All stores"}</span>
-          <span className="block truncate text-xs text-graphite">{current ? current.name : `${stores.length} dealerships`}</span>
+          <span className="line-clamp-2 text-[13px] leading-tight font-semibold text-ink">{current ? storeLabel(current.name) : "All stores"}</span>
+          {!current && <span className="block truncate text-xs text-graphite">{stores.length} dealerships</span>}
         </span>
         <ChevronsUpDown className="size-4 shrink-0 text-faint" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
+      <DropdownMenuContent align="start" className="w-72">
         <DropdownMenuLabel className="text-xs font-normal text-graphite">Show</DropdownMenuLabel>
         <DropdownMenuItem onSelect={() => go("")}>
           All stores {!store && <Check className="ml-auto size-4" />}
@@ -57,7 +57,7 @@ function StoreSwitcher({ stores }: { stores: Store[] }) {
         <DropdownMenuSeparator />
         {stores.map((s) => (
           <DropdownMenuItem key={s.short_code} onSelect={() => go(s.short_code)}>
-            <span className="w-9 text-xs text-graphite">{s.short_code}</span>
+            <span className="w-11 shrink-0 text-xs text-graphite">{s.short_code}</span>
             {storeLabel(s.name)}
             {store === s.short_code && <Check className="ml-auto size-4" />}
           </DropdownMenuItem>

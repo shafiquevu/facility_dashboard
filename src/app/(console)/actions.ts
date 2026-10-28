@@ -80,6 +80,49 @@ export async function uploadRequestFile(_: ActionState, form: FormData): Promise
   });
 }
 
+// A PDF over this is refused here, with a reason, instead of failing at
+// Vercel's request limit with a generic error.
+const MAX_REPORT_BYTES = 4 * 1024 * 1024;
+
+function reportFrom(form: FormData, required: boolean): File | null {
+  const file = fileFrom(form);
+  if (!file) {
+    if (required) throw new Error("Choose the PDF report to upload.");
+    return null;
+  }
+  if (!file.name.toLowerCase().endsWith(".pdf")) throw new Error("Reports must be a PDF. Scan or save it as a PDF and upload that.");
+  if (file.size > MAX_REPORT_BYTES) throw new Error("That PDF is over 4 MB. Save it at a smaller size (or as fewer pages) and try again.");
+  return file;
+}
+
+export async function recordInspection(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(async (actor) => {
+    const { id, completed_on, result, vendor_id, notes } = fields(form, ["id", "completed_on", "result", "vendor_id", "notes"]);
+    const file = reportFrom(form, false);
+    const body = new FormData();
+    body.set("actor", actor);
+    body.set("completed_on", completed_on);
+    body.set("result", result);
+    body.set("vendor_id", vendor_id);
+    body.set("notes", notes);
+    if (file) body.set("file", file, file.name);
+    await post(`/console/items/${id}/records`, body);
+    return file ? "Inspection recorded with its report." : "Inspection recorded. Add its PDF report when you have it.";
+  });
+}
+
+export async function attachRecordReport(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(async (actor) => {
+    const { id, record_id } = fields(form, ["id", "record_id"]);
+    const file = reportFrom(form, true)!;
+    const body = new FormData();
+    body.set("actor", actor);
+    body.set("file", file, file.name);
+    await post(`/console/items/${id}/records/${record_id}/report`, body);
+    return "Report added.";
+  });
+}
+
 export async function verifyWorkOrder(_: ActionState, form: FormData): Promise<ActionState> {
   return run(async (actor) => {
     const { kind, id, note } = fields(form, ["kind", "id", "note"]);
@@ -110,7 +153,7 @@ export async function approveProposedItem(_: ActionState, form: FormData): Promi
   return run(async (actor) => {
     const { id, next_due, owner_id, vendor_id } = fields(form, ["id", "next_due", "owner_id", "vendor_id"]);
     await post(`/console/items/${id}/approve`, { actor, next_due, owner_id, vendor_id });
-    return "Item approved. Reminders start on schedule.";
+    return "Started. Reminders go out 30, 14 and 7 days before the due date, and on it.";
   });
 }
 

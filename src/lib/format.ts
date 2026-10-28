@@ -85,15 +85,13 @@ export function subjectLabel(type: string): string {
   }[type] ?? words(type);
 }
 
-// "McGrath Honda of St. Charles" reads as "St. Charles Honda" on a tab.
 /** A building as Kelly lists it: "McGrath Honda of Elgin - Carwash Building". */
 export function locationLabel(store: string, building: string): string {
   return `${store} - ${building}`;
 }
 
+// Kelly (28 Oct) wants each dealership by its full name everywhere, exactly as
+// it is stored ("McGrath Honda of St. Charles", not "St. Charles Honda").
 export function storeLabel(name: string): string {
-  const match = name.match(/^McGrath\s+(\S+)\s+of\s+(.+)$/i);
-  if (!match) return name.replace(/^McGrath\s+/i, "");
-  const brand = match[1].toUpperCase() === "KIA" ? "Kia" : match[1];
-  return `${match[2].replace(/\.$/, "")} ${brand}`;
+  return name.trim();
 }

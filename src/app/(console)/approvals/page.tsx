@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { get, type Approvals } from "@/lib/api";
+import { get, type Approvals, type Meta } from "@/lib/api";
 import { day, locationLabel, money, words } from "@/lib/format";
 import { access, attempt, one, type SearchParams } from "@/lib/page";
 import { NoAccess } from "@/components/no-access";
@@ -29,9 +29,12 @@ function Count({ n }: { n: number }) {
 async function Content({ searchParams }: { searchParams: SearchParams }) {
   if (!(await access())) return <NoAccess />;
   const store = one((await searchParams).store);
-  const result = await attempt(() => get<Approvals>("/console/approvals", { store }));
+  const result = await attempt(() => Promise.all([
+    get<Approvals>("/console/approvals", { store }),
+    get<Meta>("/console/meta"),
+  ]));
   if (result.error !== null) return <ErrorState message={result.error} />;
-  const a = result.data;
+  const [a, meta] = result.data;
   const imported = a.proposed_items.filter((p) => p.source === "import");
   const proposed = a.proposed_items.filter((p) => p.source !== "import");
 
@@ -65,7 +68,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
 
       <Section
         title={<>Inspections waiting for a due date<Count n={imported.length} /></>}
-        description="Imported from the facility workbook without a date. They stay off the schedule and send no reminders until one is set."
+        description="Imported from the facility workbook. Set the date each inspection is due and who is responsible, then start it: they are reminded 30, 14 and 7 days before the due date and on the day. Nothing is sent until then."
         flush
       >
         {imported.length ? (
@@ -73,12 +76,12 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
             {imported.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium">{p.item}</p>
+                  <Link href={`/work-orders/item/${p.id}`} className="text-[13px] font-medium hover:text-brand">{p.item}</Link>
                   <p className="text-xs text-graphite">
                     {locationLabel(p.store, p.building)}. {words(p.frequency)}, {p.vendor ?? "no vendor"}{p.last_completed ? `, last done ${day(p.last_completed)}` : ""}
                   </p>
                 </div>
-                <ProposedItemForms id={p.id} nextDue={p.next_due} imported />
+                <ProposedItemForms id={p.id} nextDue={p.next_due} imported meta={meta} />
               </li>
             ))}
           </ul>
@@ -93,12 +96,12 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
             {proposed.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium">{p.item}</p>
+                  <Link href={`/work-orders/item/${p.id}`} className="text-[13px] font-medium hover:text-brand">{p.item}</Link>
                   <p className="text-xs text-graphite">
                     {p.category}, {words(p.frequency)}. {locationLabel(p.store, p.building)}. Proposed by {p.proposed_by ?? "a store"} on {day(p.created_at.slice(0, 10))}
                   </p>
                 </div>
-                <ProposedItemForms id={p.id} nextDue={p.next_due} imported={false} />
+                <ProposedItemForms id={p.id} nextDue={p.next_due} imported={false} meta={meta} />
               </li>
             ))}
           </ul>

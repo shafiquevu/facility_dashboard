@@ -46,8 +46,16 @@ export type RecommendationRow = {
   decided_on: string | null; reason: string | null; review_date: string | null; raised_on: string;
 };
 
+export type InspectionRecord = {
+  id: string; completed_on: string; result: string; vendor: string | null; notes: string | null;
+  recorded_by: string; created_at: string;
+  documents: { kind: string; uploaded_by: string | null; uploaded_at: string; url: string | null }[];
+};
+
 export type WorkOrderDetail = WorkOrder & {
   documents: Document[];
+  records?: InspectionRecord[];
+  live?: boolean;
   history: HistoryEntry[];
   recommendations: RecommendationRow[];
   proof_link: string | null;
@@ -113,7 +121,7 @@ export type Overview = {
   assets: Asset[]; activity: ActivityEvent[]; matrix: Matrix; gaps: Gap[];
 };
 
-export type Store = { id: string; name: string; short_code: string };
+export type Store = { id: string; name: string; short_code: string; address?: string | null };
 export type Meta = {
   stores: Store[];
   locations: { id: string; store_code: string; store: string; building: string; address: string | null }[];

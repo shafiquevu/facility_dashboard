@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Check, Copy } from "lucide-react";
 import type { Meta, WorkOrderDetail } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { assignWorkOrder, decideRecommendation, uploadRequestFile, verifyWorkOrder } from "../../../actions";
+import { assignWorkOrder, attachRecordReport, decideRecommendation, recordInspection, uploadRequestFile, verifyWorkOrder } from "../../../actions";
 import { ActionForm, Submit } from "@/components/action-form";
 import { Field, PersonSelect, Select, TextArea, TextInput, VendorSelect } from "@/components/fields";
 
@@ -59,6 +59,45 @@ export function RequestUpload({ id }: { id: string }) {
       </Field>
       <Submit variant="outline">Upload</Submit>
       <p className="text-xs text-graphite sm:col-span-3">Proof of completion moves this to verification.</p>
+    </ActionForm>
+  );
+}
+
+export function RecordInspectionForm({ id, meta }: { id: string; meta: Meta }) {
+  return (
+    <ActionForm action={recordInspection} resetOnSuccess className="grid gap-3 border-t border-line bg-surface-sunk/60 px-5 py-4 md:grid-cols-2">
+      <input type="hidden" name="id" value={id} />
+      <Field label="Date it was done" htmlFor="rec-date">
+        <TextInput id="rec-date" name="completed_on" type="date" required />
+      </Field>
+      <Field label="Result" htmlFor="rec-result">
+        <Select id="rec-result" name="result" defaultValue="passed">
+          <option value="passed">Passed</option>
+          <option value="passed_with_recommendations">Passed, with recommendations</option>
+          <option value="failed">Failed</option>
+        </Select>
+      </Field>
+      <Field label="Vendor" htmlFor="rec-vendor">
+        <VendorSelect meta={meta} id="rec-vendor" />
+      </Field>
+      <Field label="Report (PDF only)" htmlFor="rec-file" hint="Up to 4 MB.">
+        <TextInput id="rec-file" name="file" type="file" accept="application/pdf,.pdf" />
+      </Field>
+      <Field label="Notes" htmlFor="rec-notes" className="md:col-span-2">
+        <TextArea id="rec-notes" name="notes" rows={2} placeholder="Findings, deficiencies, who attended, anything worth finding later" />
+      </Field>
+      <div className="md:col-span-2"><Submit variant="outline">Record inspection</Submit></div>
+    </ActionForm>
+  );
+}
+
+export function AttachReportForm({ id, recordId }: { id: string; recordId: string }) {
+  return (
+    <ActionForm action={attachRecordReport} resetOnSuccess className="mt-2 flex flex-wrap items-center gap-2">
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="record_id" value={recordId} />
+      <TextInput name="file" type="file" accept="application/pdf,.pdf" required aria-label="PDF report" className="max-w-64" />
+      <Submit variant="outline">Add PDF</Submit>
     </ActionForm>
   );
 }
