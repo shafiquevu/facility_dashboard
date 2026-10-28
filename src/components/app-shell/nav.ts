@@ -1,6 +1,6 @@
 import {
   BarChart3, Building2, CalendarDays, ClipboardCheck, ClipboardList, FileText, History, LayoutGrid,
-  Package, RefreshCcw, Settings, ShieldCheck, Users, Wrench, type LucideIcon,
+  Package, PlayCircle, RefreshCcw, Settings, ShieldCheck, Users, Wrench, type LucideIcon,
 } from "lucide-react";
 
 export type Counts = {
@@ -53,6 +53,7 @@ export const NAV: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/reports", label: "Reports", icon: BarChart3 },
       { href: "/history", label: "Audit trail", icon: History },
+      { href: "/videos", label: "How-to videos", icon: PlayCircle },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
