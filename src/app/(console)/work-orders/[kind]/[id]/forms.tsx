@@ -10,12 +10,16 @@ import { ActionForm, Submit } from "@/components/action-form";
 import { Field, PersonSelect, Select, TextArea, TextInput, VendorSelect } from "@/components/fields";
 
 export function AssignForm({ order, meta }: { order: WorkOrderDetail; meta: Meta }) {
+  // An inspection's assigned_to falls back to its owner, so the form shows
+  // only who it is actually assigned to; saving must not turn the owner into it.
+  const assignee = order.kind === "request" ? order.assigned_to_id : order.assignee_id ?? null;
   return (
-    <ActionForm action={assignWorkOrder} className="space-y-4">
+    // Keyed on the saved values so the fields show them again after a save.
+    <ActionForm key={`${assignee}-${order.vendor_id}-${order.due}`} action={assignWorkOrder} className="space-y-4">
       <input type="hidden" name="kind" value={order.kind} />
       <input type="hidden" name="id" value={order.id} />
       <Field label="Assigned to" htmlFor="assignee_id" hint={order.kind === "item" ? "Empty means it stays with its owner." : undefined}>
-        <PersonSelect meta={meta} id="assignee_id" name="assignee_id" value={order.kind === "request" ? order.assigned_to_id : null} empty="Nobody" />
+        <PersonSelect meta={meta} id="assignee_id" name="assignee_id" value={assignee} empty="Nobody" />
       </Field>
       <Field label="Vendor" htmlFor="vendor_id">
         <VendorSelect meta={meta} id="vendor_id" value={order.vendor_id} />

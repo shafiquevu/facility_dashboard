@@ -55,6 +55,7 @@ export type InspectionRecord = {
 export type WorkOrderDetail = WorkOrder & {
   documents: Document[];
   records?: InspectionRecord[];
+  assignee_id?: string | null;
   live?: boolean;
   history: HistoryEntry[];
   recommendations: RecommendationRow[];

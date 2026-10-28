@@ -164,7 +164,7 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
                 ))}
               </ul>
             ) : (
-              <div className="px-5 pb-5"><Empty title="No documents yet">{o.kind === "item" ? "They arrive through the completion link." : "Upload the proof below once the work is done."}</Empty></div>
+              <div className="px-5 pb-5"><Empty title="No documents yet">{o.kind === "item" ? "Add the PDF under Inspection history above, or it arrives through the completion link." : "Upload the proof below once the work is done."}</Empty></div>
             )}
             {o.kind === "request" && o.state !== "complete" && <RequestUpload id={o.id} />}
           </Section>
