@@ -9,6 +9,20 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "5mb" },
     proxyClientMaxBodySize: "5mb",
   },
+  // Links in reminders and emails carry this app's address, but these pages
+  // are still served by hangar: signed document links, the approve/decline
+  // page for a finding, and the public forms.
+  async rewrites() {
+    const hangar = process.env.FACILITY_MAINTENANCE_URL?.trim().replace(/\/$/, "");
+    if (!hangar) return [];
+    return [
+      { source: "/doc", destination: `${hangar}/doc` },
+      { source: "/r/:id", destination: `${hangar}/r/:id` },
+      { source: "/forms/:path*", destination: `${hangar}/forms/:path*` },
+      { source: "/coi", destination: `${hangar}/forms/coi` },
+      { source: "/board", destination: `${hangar}/board.html` },
+    ];
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

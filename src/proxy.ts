@@ -49,7 +49,8 @@ export async function proxy(request: NextRequest) {
 }
 
 // /i/... is the completion link vendors open from a reminder: no login, its
-// signed token is checked by hangar.
+// signed token is checked by hangar. The same goes for the hangar pages
+// rewritten in next.config.ts (documents, findings, public forms).
 export const config = {
-  matcher: ["/((?!api|i/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  matcher: ["/((?!api|i/|doc$|r/|forms/|coi$|board$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };
