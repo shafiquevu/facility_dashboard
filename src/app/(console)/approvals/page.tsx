@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { get, type Approvals } from "@/lib/api";
-import { day, money, storeLabel, words } from "@/lib/format";
+import { day, locationLabel, money, words } from "@/lib/format";
 import { access, attempt, one, type SearchParams } from "@/lib/page";
 import { NoAccess } from "@/components/no-access";
 import { Chip, Empty, ErrorState, Loading, PageHeader, Section } from "@/components/kit";
@@ -52,7 +52,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                   <Chip tone={d.days_waiting > 7 ? "overdue" : "soon"}>Waiting {d.days_waiting} day{d.days_waiting === 1 ? "" : "s"}</Chip>
                 </div>
                 <p className="mt-1 text-xs text-graphite">
-                  {d.item}, {storeLabel(d.store)} {d.building}. Estimated {money(d.cost)}, raised {day(d.raised_on)}{d.approver ? `, for ${d.approver}` : ""}.
+                  {d.item}, {locationLabel(d.store, d.building)}. Estimated {money(d.cost)}, raised {day(d.raised_on)}{d.approver ? `, for ${d.approver}` : ""}.
                 </p>
                 <DecisionForm id={d.id} />
               </li>
@@ -75,7 +75,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                 <div className="min-w-0">
                   <p className="text-[13px] font-medium">{p.item}</p>
                   <p className="text-xs text-graphite">
-                    {storeLabel(p.store)}, {p.building}. {words(p.frequency)}, {p.vendor ?? "no vendor"}{p.last_completed ? `, last done ${day(p.last_completed)}` : ""}
+                    {locationLabel(p.store, p.building)}. {words(p.frequency)}, {p.vendor ?? "no vendor"}{p.last_completed ? `, last done ${day(p.last_completed)}` : ""}
                   </p>
                 </div>
                 <ProposedItemForms id={p.id} nextDue={p.next_due} imported />
@@ -95,7 +95,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                 <div className="min-w-0">
                   <p className="text-[13px] font-medium">{p.item}</p>
                   <p className="text-xs text-graphite">
-                    {p.category}, {words(p.frequency)}. {storeLabel(p.store)}, {p.building}. Proposed by {p.proposed_by ?? "a store"} on {day(p.created_at.slice(0, 10))}
+                    {p.category}, {words(p.frequency)}. {locationLabel(p.store, p.building)}. Proposed by {p.proposed_by ?? "a store"} on {day(p.created_at.slice(0, 10))}
                   </p>
                 </div>
                 <ProposedItemForms id={p.id} nextDue={p.next_due} imported={false} />

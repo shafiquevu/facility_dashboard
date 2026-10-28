@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import type { Meta } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { storeLabel, words } from "@/lib/format";
+import { locationLabel, words } from "@/lib/format";
 
 // Native inputs and selects, styled to the system: they work with server
 // actions and FormData as-is, and the browser's own pickers on phones.
@@ -46,7 +46,7 @@ export function LocationSelect({ meta, id = "location_id", value, store, require
     <Select id={id} name="location_id" defaultValue={value ?? ""} required={required}>
       <option value="">Choose a store and building</option>
       {locations.map((l) => (
-        <option key={l.id} value={l.id}>{storeLabel(l.store)}, {l.building}</option>
+        <option key={l.id} value={l.id}>{locationLabel(l.store, l.building)}</option>
       ))}
     </Select>
   );

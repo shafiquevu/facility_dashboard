@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ChevronRight, ExternalLink, FileText } from "lucide-react";
 import { get, type Meta, type WorkOrderDetail } from "@/lib/api";
-import { dateTime, day, dueLabel, money, storeLabel, verb, words } from "@/lib/format";
+import { dateTime, day, dueLabel, money, verb, words } from "@/lib/format";
 import { access, attempt } from "@/lib/page";
 import { NoAccess } from "@/components/no-access";
 import { Chip, Empty, ErrorState, Loading, PriorityLabel, Section, WorkOrderStatus } from "@/components/kit";
@@ -36,7 +36,7 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
   const { order: o, meta } = result.data;
   const waiting = o.state === "awaiting_verification";
   const facts: [string, React.ReactNode][] = [
-    ["Location", <>{storeLabel(o.store)}<span className="block text-xs text-graphite">{o.building}</span></>],
+    ["Location", <>{o.store}<span className="block text-xs text-graphite">{o.building}</span></>],
     ["Due", <>{day(o.due, "No due date")}{o.state !== "complete" && o.due && <span className={`block text-xs ${o.overdue ? "text-overdue" : "text-graphite"}`}>{dueLabel(o.days_until_due)}</span>}</>],
     ["Assigned to", o.assigned_to ?? <span className="text-faint">Nobody</span>],
     ["Vendor", o.vendor ?? <span className="text-faint">None</span>],

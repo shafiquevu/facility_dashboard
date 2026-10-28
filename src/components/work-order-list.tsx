@@ -3,6 +3,7 @@ import Form from "next/form";
 import { Search } from "lucide-react";
 import { get, type Counts, type WorkOrder } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { locationLabel } from "@/lib/format";
 import { access, attempt, one, type SearchParams } from "@/lib/page";
 import { NoAccess } from "@/components/no-access";
 import { Empty, ErrorState, Section } from "@/components/kit";
@@ -23,7 +24,7 @@ function sortOrders(orders: WorkOrder[], sort: string, dir: string): WorkOrder[]
   const key = (o: WorkOrder): string | number => {
     switch (sort) {
       case "number": return Number(o.number.replace(/\D/g, ""));
-      case "store": return `${o.store} ${o.building}`;
+      case "store": return locationLabel(o.store, o.building);
       case "vendor": return o.vendor ?? "~";
       case "assigned_to": return o.assigned_to ?? "~";
       case "priority": return PRIORITY[o.priority];

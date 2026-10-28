@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ChevronDown } from "lucide-react";
 import { get, type Asset, type Meta } from "@/lib/api";
-import { day, storeLabel, words } from "@/lib/format";
+import { day, words } from "@/lib/format";
 import { access, attempt, one, withStore, type SearchParams } from "@/lib/page";
 import { NoAccess } from "@/components/no-access";
 import { AssetStatusLabel, Empty, ErrorState, Loading, PageHeader, Section } from "@/components/kit";
@@ -48,7 +48,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                       <span className="block truncate text-[13px] font-medium">{a.name}</span>
                       <span className="block truncate text-xs text-graphite">{[a.category, a.make, a.model].filter(Boolean).join(", ") || "No details"}</span>
                     </span>
-                    <span className="text-[13px]">{storeLabel(a.store)}<span className="block text-xs text-graphite">{a.building}</span></span>
+                    <span className="text-[13px]">{a.store}<span className="block text-xs text-graphite">{a.building}</span></span>
                     <span className="text-[13px] text-graphite">{a.assigned_to ?? "Nobody"}</span>
                     <span className="text-[13px]"><span className="block text-xs text-graphite">Last</span><span className="num">{day(a.last_service)}</span></span>
                     <span className="text-[13px]"><span className="block text-xs text-graphite">Next</span><span className="num">{day(a.next_service)}</span></span>

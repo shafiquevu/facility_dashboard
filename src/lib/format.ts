@@ -86,6 +86,11 @@ export function subjectLabel(type: string): string {
 }
 
 // "McGrath Honda of St. Charles" reads as "St. Charles Honda" on a tab.
+/** A building as Kelly lists it: "McGrath Honda of Elgin - Carwash Building". */
+export function locationLabel(store: string, building: string): string {
+  return `${store} - ${building}`;
+}
+
 export function storeLabel(name: string): string {
   const match = name.match(/^McGrath\s+(\S+)\s+of\s+(.+)$/i);
   if (!match) return name.replace(/^McGrath\s+/i, "");

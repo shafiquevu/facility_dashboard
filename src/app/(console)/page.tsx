@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Plus } from "lucide-react";
 import { get, type CalendarEvent, type Meta, type Overview } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { dateTime, day, storeLabel, subjectLabel, verb } from "@/lib/format";
+import { dateTime, day, locationLabel, storeLabel, subjectLabel, verb } from "@/lib/format";
 import { access, attempt, one, withStore, type SearchParams } from "@/lib/page";
 import { Button } from "@/components/ui/button";
 import { NoAccess } from "@/components/no-access";
@@ -99,7 +99,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                     <Link href={workOrderHref(w)} className="group flex items-start gap-3 px-5 py-3 hover:bg-surface-sunk/70">
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] font-medium text-ink group-hover:text-brand">{w.title}</span>
-                        <span className="mt-0.5 block truncate text-xs text-graphite">{storeLabel(w.store)}, {w.building}</span>
+                        <span className="mt-0.5 block truncate text-xs text-graphite">{locationLabel(w.store, w.building)}</span>
                         <span className="mt-1.5 flex items-center gap-3">
                           <PriorityLabel priority={w.priority} />
                           <span className="text-xs text-graphite">{w.vendor ?? "No vendor"}</span>
