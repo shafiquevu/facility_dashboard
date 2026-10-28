@@ -123,6 +123,15 @@ export async function attachRecordReport(_: ActionState, form: FormData): Promis
   });
 }
 
+export async function removeDocument(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(async (actor) => {
+    const { id, doc_id, reason } = fields(form, ["id", "doc_id", "reason"]);
+    if (!reason) throw new Error("Say why it is being removed, for the history.");
+    await post(`/console/items/${id}/documents/${doc_id}/remove`, { actor, reason });
+    return "Document removed.";
+  });
+}
+
 export async function verifyWorkOrder(_: ActionState, form: FormData): Promise<ActionState> {
   return run(async (actor) => {
     const { kind, id, note } = fields(form, ["kind", "id", "note"]);

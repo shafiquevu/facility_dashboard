@@ -64,6 +64,9 @@ const VERBS: Record<string, string> = {
   raised: "Raised recommendation",
   reminded: "Sent reminder",
   escalated: "Escalated",
+  document_removed: "Removed a document",
+  inspection_recorded: "Recorded a past inspection",
+  report_added: "Added a report",
 };
 
 export function verb(value: string): string {

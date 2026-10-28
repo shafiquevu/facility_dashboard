@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Check, Copy } from "lucide-react";
 import type { Meta, WorkOrderDetail } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { assignWorkOrder, attachRecordReport, decideRecommendation, recordInspection, uploadRequestFile, verifyWorkOrder } from "../../../actions";
+import { assignWorkOrder, attachRecordReport, decideRecommendation, recordInspection, removeDocument, uploadRequestFile, verifyWorkOrder } from "../../../actions";
 import { ActionForm, Submit } from "@/components/action-form";
 import { Field, PersonSelect, Select, TextArea, TextInput, VendorSelect } from "@/components/fields";
 
@@ -103,6 +103,22 @@ export function AttachReportForm({ id, recordId }: { id: string; recordId: strin
       <TextInput name="file" type="file" accept="application/pdf,.pdf" required aria-label="PDF report" className="max-w-64" />
       <Submit variant="outline">Add PDF</Submit>
     </ActionForm>
+  );
+}
+
+// Takes a wrong upload off the inspection. The file stays in storage and the
+// history records who removed it and why.
+export function RemoveDocumentForm({ id, docId }: { id: string; docId: string }) {
+  return (
+    <details className="group">
+      <summary className="cursor-pointer list-none text-[13px] font-medium text-graphite hover:text-overdue">Remove</summary>
+      <ActionForm action={removeDocument} className="mt-2 flex flex-wrap items-center gap-2">
+        <input type="hidden" name="id" value={id} />
+        <input type="hidden" name="doc_id" value={docId} />
+        <TextInput name="reason" required placeholder="Why? e.g. wrong file, test upload" aria-label="Reason for removing" className="max-w-64" />
+        <Submit variant="destructive" size="sm">Remove document</Submit>
+      </ActionForm>
+    </details>
   );
 }
 

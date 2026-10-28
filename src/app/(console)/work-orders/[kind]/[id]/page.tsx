@@ -7,7 +7,7 @@ import { dateTime, day, dueLabel, money, verb, words } from "@/lib/format";
 import { access, attempt } from "@/lib/page";
 import { NoAccess } from "@/components/no-access";
 import { Chip, Empty, ErrorState, Loading, PriorityLabel, Section, WorkOrderStatus } from "@/components/kit";
-import { AssignForm, AttachReportForm, CopyLink, DecisionForm, RecordInspectionForm, RequestUpload, VerifyForm } from "./forms";
+import { AssignForm, AttachReportForm, CopyLink, DecisionForm, RecordInspectionForm, RemoveDocumentForm, RequestUpload, VerifyForm } from "./forms";
 
 export default function WorkOrderPage({ params }: { params: Promise<{ kind: string; id: string }> }) {
   return (
@@ -155,11 +155,14 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
                       <span className="block text-[13px] font-medium text-ink">{words(d.kind)}</span>
                       <span className="block text-xs text-graphite">{d.uploaded_by ?? "Unknown"}, {dateTime(d.uploaded_at)}</span>
                     </span>
-                    {d.url && (
-                      <a href={d.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[13px] font-medium text-brand hover:underline">
-                        Open <ExternalLink className="size-3.5" />
-                      </a>
-                    )}
+                    <span className="flex shrink-0 flex-col items-end gap-1">
+                      {d.url && (
+                        <a href={d.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[13px] font-medium text-brand hover:underline">
+                          Open <ExternalLink className="size-3.5" />
+                        </a>
+                      )}
+                      {o.kind === "item" && <RemoveDocumentForm id={o.id} docId={d.id} />}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -204,6 +207,9 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
                   <li key={i} className="relative">
                     <span className="absolute top-1.5 -left-[25px] size-2.5 rounded-full border-2 border-surface bg-brand" aria-hidden="true" />
                     <p className="text-[13px]"><span className="font-medium text-ink">{verb(h.verb)}</span> <span className="text-graphite">by {h.actor ?? "the system"}</span></p>
+                    {typeof (h.detail?.reason ?? h.detail?.note) === "string" && String(h.detail.reason ?? h.detail.note).trim() && (
+                      <p className="text-[13px] text-graphite">&ldquo;{String(h.detail.reason ?? h.detail.note)}&rdquo;</p>
+                    )}
                     <time className="text-xs text-faint" dateTime={h.occurred_at}>{dateTime(h.occurred_at)}</time>
                   </li>
                 ))}
