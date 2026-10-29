@@ -19,7 +19,7 @@ export default function WorkRequestsPage({ searchParams }: { searchParams: Searc
           <>
             {base && (
               <Button variant="outline" asChild>
-                <a href={`${base}/forms/work-request`} target="_blank" rel="noreferrer">Store request form <ExternalLink /></a>
+                <a href="/forms/work-request" target="_blank" rel="noreferrer">Store request form <ExternalLink /></a>
               </Button>
             )}
             <Button asChild>
