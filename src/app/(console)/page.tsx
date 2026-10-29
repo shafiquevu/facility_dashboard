@@ -47,7 +47,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
     { label: "Due today", value: k.due_today, note: "still open", href: s("/work-orders?due=today") },
     { label: "Waiting on you", value: k.pending_approvals, note: "to verify or decide", href: s("/approvals"), tone: k.pending_approvals ? "awaiting" : undefined },
     { label: "Insurance not current", value: k.expired_cois + k.expiring_cois, note: `${k.expired_cois} expired or missing`, href: s("/compliance"), tone: k.expired_cois ? "overdue" : undefined },
-    { label: "Inspections due", value: k.upcoming_inspections, note: "in the next 30 days", href: s("/calendar") },
+    { label: "Inspections due", value: k.upcoming_inspections, note: "in the next 60 days", href: s("/recurring") },
   ];
 
   const byDay = new Map<string, CalendarEvent[]>();
