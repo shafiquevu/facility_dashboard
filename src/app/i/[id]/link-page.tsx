@@ -22,11 +22,22 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 
 // The upload goes from the browser straight to hangar, so a large scanned
 // report is not cut off by Vercel's request limit.
-export function LinkPage({ initial, uploadUrl }: { initial: LinkView; uploadUrl: string }) {
+export function LinkPage({ initial, uploadUrl, scheduleUrl, historyUrl }: {
+  initial: LinkView; uploadUrl: string; scheduleUrl: string; historyUrl: string;
+}) {
   const [view, setView] = useState(initial);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const form = useRef<HTMLFormElement>(null);
+
+  // The schedule and history forms post the same way as the upload.
+  async function send(url: string, data: FormData): Promise<boolean> {
+    const response = await fetch(url, { method: "POST", body: data });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(typeof body.detail === "string" ? body.detail : "That did not go through. Try again.");
+    setView(body as LinkView);
+    return true;
+  }
 
   const closed = view.status === "verified_complete";
   const submitted = view.status === "proof_submitted" || view.status === "awaiting_document";
@@ -78,9 +89,13 @@ export function LinkPage({ initial, uploadUrl }: { initial: LinkView; uploadUrl:
         <Row label="Repeats" value={words(view.frequency)} />
         <Row label="Accountable owner" value={view.owner} />
         <Row label="Currently with" value={view.with} />
+        <Row label="Service manager" value={view.service_manager} />
+        <Row label="Visit booked for" value={view.scheduled_for ? day(view.scheduled_for) : null} />
       </Section>
 
-      <Section title="Approved vendor">
+      {!closed && <ScheduleBox view={view} onSend={(data) => send(scheduleUrl, data)} />}
+
+      <Section title="Vendor">
         <Row label="Vendor" value={view.vendor ?? "Not assigned yet. Contact Kelly."} />
         <Row label="Phone" value={view.vendor_phone} />
       </Section>
@@ -139,6 +154,97 @@ export function LinkPage({ initial, uploadUrl }: { initial: LinkView; uploadUrl:
           </form>
         </Section>
       )}
+
+      <HistoryBox view={view} onSend={(data) => send(historyUrl, data)} />
     </div>
+  );
+}
+
+function useSubmit(onSend: (data: FormData) => Promise<boolean>) {
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formEl = event.currentTarget;
+    setError("");
+    setBusy(true);
+    try {
+      await onSend(new FormData(formEl));
+      formEl.reset();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "That did not go through. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return { error, busy, submit };
+}
+
+// Book the vendor's visit, or move it when they cancel (Kelly, 29 Oct).
+function ScheduleBox({ view, onSend }: { view: LinkView; onSend: (data: FormData) => Promise<boolean> }) {
+  const { error, busy, submit } = useSubmit(onSend);
+  const booked = view.scheduled_for;
+  return (
+    <Section
+      title="Scheduled visit"
+      description={booked ? `Booked for ${day(booked)}. If the vendor cancels, move it here.` : "When the vendor is booked to come. It goes on the calendar."}
+    >
+      <form onSubmit={submit} className="grid gap-4" key={booked ?? "none"}>
+        <Field label={booked ? "New date" : "Visit date"} htmlFor="scheduled_for">
+          <TextInput id="scheduled_for" name="scheduled_for" type="date" required defaultValue={booked ?? ""} />
+        </Field>
+        {booked && (
+          <Field label="Why is it moving?" htmlFor="reason">
+            <TextInput id="reason" name="reason" required placeholder="Vendor cancelled" />
+          </Field>
+        )}
+        <Field label="Your name" htmlFor="sched-by">
+          <TextInput id="sched-by" name="by" required autoComplete="name" />
+        </Field>
+        {error && <p role="alert" className="rounded-md bg-overdue-tint px-3 py-2 text-[13px] text-overdue">{error}</p>}
+        <div><Button type="submit" variant="outline" disabled={busy}>{busy && <Loader2 className="size-4 animate-spin" />} {booked ? "Move the visit" : "Book the visit"}</Button></div>
+      </form>
+    </Section>
+  );
+}
+
+// Past inspections, and adding one with its report.
+function HistoryBox({ view, onSend }: { view: LinkView; onSend: (data: FormData) => Promise<boolean> }) {
+  const { error, busy, submit } = useSubmit(onSend);
+  return (
+    <Section title="Inspection history" description="Past inspections on file. Add older ones with their report.">
+      {view.records.length ? view.records.map((r, i) => (
+        <div key={i} className="border-t border-line py-2.5 text-[14px] first:border-t-0">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-medium text-ink">{day(r.completed_on)}{r.vendor ? `, ${r.vendor}` : ""}</span>
+            <Chip tone={r.result === "failed" ? "overdue" : "verified"}>{words(r.result)}</Chip>
+          </div>
+          <p className="text-[13px] text-graphite">{r.reports ? "Report on file" : "No report"} · added by {r.recorded_by}</p>
+        </div>
+      )) : <p className="text-[14px] text-graphite">Nothing on file yet.</p>}
+      <form onSubmit={submit} className="mt-4 grid gap-4 border-t border-line pt-4">
+        <Field label="Date it was done" htmlFor="hist-date">
+          <TextInput id="hist-date" name="completed_on" type="date" required />
+        </Field>
+        <Field label="Result" htmlFor="hist-result">
+          <Select id="hist-result" name="result" defaultValue="passed">
+            <option value="passed">Passed</option>
+            <option value="passed_with_recommendations">Passed, with recommendations</option>
+            <option value="failed">Failed</option>
+          </Select>
+        </Field>
+        <Field label="The report, as a PDF (optional)" htmlFor="hist-file">
+          <TextInput id="hist-file" name="file" type="file" accept=".pdf,application/pdf" />
+        </Field>
+        <Field label="Notes (optional)" htmlFor="hist-notes">
+          <TextArea id="hist-notes" name="notes" rows={2} />
+        </Field>
+        <Field label="Your name" htmlFor="hist-by">
+          <TextInput id="hist-by" name="by" required autoComplete="name" />
+        </Field>
+        {error && <p role="alert" className="rounded-md bg-overdue-tint px-3 py-2 text-[13px] text-overdue">{error}</p>}
+        <div><Button type="submit" variant="outline" disabled={busy}>{busy && <Loader2 className="size-4 animate-spin" />} Add to history</Button></div>
+      </form>
+    </Section>
   );
 }

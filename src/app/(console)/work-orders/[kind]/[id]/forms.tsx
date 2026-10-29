@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Check, Copy } from "lucide-react";
 import type { Meta, WorkOrderDetail } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { assignWorkOrder, attachRecordReport, decideRecommendation, recordInspection, removeDocument, uploadRequestFile, verifyWorkOrder } from "../../../actions";
+import { assignWorkOrder, attachRecordReport, decideRecommendation, recordInspection, removeDocument, scheduleVisit, uploadRequestFile, verifyWorkOrder } from "../../../actions";
 import { ActionForm, Submit } from "@/components/action-form";
 import { Field, PersonSelect, Select, TextArea, TextInput, VendorSelect } from "@/components/fields";
 
@@ -28,6 +28,25 @@ export function AssignForm({ order, meta }: { order: WorkOrderDetail; meta: Meta
         <TextInput id="due" name="due" type="date" defaultValue={order.due ?? ""} />
       </Field>
       <Submit variant="outline">Save assignment</Submit>
+    </ActionForm>
+  );
+}
+
+// Book the vendor's visit, or move it when they cancel. Moving one needs a
+// reason; the history keeps every date it had.
+export function ScheduleForm({ id, scheduled }: { id: string; scheduled: string | null }) {
+  return (
+    <ActionForm key={scheduled ?? "none"} action={scheduleVisit} className="space-y-4">
+      <input type="hidden" name="id" value={id} />
+      <Field label={scheduled ? "Move it to" : "Visit date"} htmlFor="scheduled_for" hint={scheduled ? undefined : "The day the vendor is booked to come. It shows on the calendar."}>
+        <TextInput id="scheduled_for" name="scheduled_for" type="date" required={!scheduled} defaultValue={scheduled ?? ""} />
+      </Field>
+      {scheduled && (
+        <Field label="Why is it moving?" htmlFor="reason" hint="Required. Clear the date to cancel the booking.">
+          <TextInput id="reason" name="reason" placeholder="Vendor cancelled, store asked to move it" />
+        </Field>
+      )}
+      <Submit variant="outline">{scheduled ? "Save new date" : "Book visit"}</Submit>
     </ActionForm>
   );
 }

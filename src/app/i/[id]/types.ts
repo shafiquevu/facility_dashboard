@@ -16,5 +16,8 @@ export type LinkView = {
   colour: "red" | "yellow" | "green";
   documents: { kind: string; uploaded_at: string }[];
   outstanding: string[];
+  service_manager: string | null;
+  scheduled_for: string | null;
+  records: { completed_on: string; result: string; vendor: string | null; notes: string | null; recorded_by: string; reports: number }[];
   message: string;
 };

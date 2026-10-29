@@ -54,5 +54,5 @@ async function Load({ params, searchParams }: Pick<PageProps<"/i/[id]">, "params
       </section>
     );
   }
-  return <LinkPage initial={view} uploadUrl={`${path}/upload${query}`} />;
+  return <LinkPage initial={view} uploadUrl={`${path}/upload${query}`} scheduleUrl={`${path}/schedule${query}`} historyUrl={`${path}/records${query}`} />;
 }

@@ -72,13 +72,13 @@ export function NewWorkOrderForm({ meta, store, type: initial }: { meta: Meta; s
             <Field label="Repeats" htmlFor="frequency">
               <FrequencySelect meta={meta} id="frequency" name="frequency" />
             </Field>
-            <Field label="Next due" htmlFor="next_due" hint="Or give the date it was last done and this is worked out.">
+            <Field label="Next due" htmlFor="next_due" hint="Or the date it was last done, and this is worked out. Leave both blank to add its past inspections first; it then waits in Approvals for a date.">
               <TextInput id="next_due" name="next_due" type="date" />
             </Field>
             <Field label="Last done" htmlFor="last_completed">
               <TextInput id="last_completed" name="last_completed" type="date" />
             </Field>
-            <Field label="Owner" htmlFor="owner_id" hint="Accountable for it. Reminders and escalations start here.">
+            <Field label="Owner" htmlFor="owner_id" hint="Accountable for it. Left empty, it is the store's service manager.">
               <PersonSelect meta={meta} id="owner_id" name="owner_id" />
             </Field>
           </>

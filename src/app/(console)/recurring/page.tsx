@@ -13,7 +13,7 @@ export default function RecurringPage({ searchParams }: { searchParams: SearchPa
     <>
       <PageHeader
         title="Recurring maintenance"
-        description="Scheduled inspections. Reminders go out 30, 14 and 7 days before the due date, and each one reschedules itself once it is verified."
+        description="Every inspection at every store, including those still waiting for a due date. Reminders go out 60, 30, 14 and 7 days before the due date, and each one reschedules itself once it is verified."
         actions={
           <Button asChild>
             <Link href="/work-orders/new?type=item"><Plus /> Add inspection</Link>

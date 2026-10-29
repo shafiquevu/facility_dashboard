@@ -162,7 +162,16 @@ export async function approveProposedItem(_: ActionState, form: FormData): Promi
   return run(async (actor) => {
     const { id, next_due, owner_id, vendor_id } = fields(form, ["id", "next_due", "owner_id", "vendor_id"]);
     await post(`/console/items/${id}/approve`, { actor, next_due, owner_id, vendor_id });
-    return "Started. Reminders go out 30, 14 and 7 days before the due date, and on it.";
+    return "Started. Reminders go out 60, 30, 14 and 7 days before the due date, and on it.";
+  });
+}
+
+// The date the vendor is booked to come. Moving or clearing one needs a reason.
+export async function scheduleVisit(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(async (actor) => {
+    const { id, scheduled_for, reason } = fields(form, ["id", "scheduled_for", "reason"]);
+    await post(`/console/items/${id}/schedule`, { actor, scheduled_for, reason });
+    return scheduled_for ? "Visit booked. It is on the calendar." : "Booking cleared.";
   });
 }
 
@@ -187,14 +196,44 @@ export async function approveVendor(_: ActionState, form: FormData): Promise<Act
 
 export async function addVendor(_: ActionState, form: FormData): Promise<ActionState> {
   return run(async (actor) => {
-    await post("/console/vendors", { actor, ...fields(form, ["name", "contact", "phone", "email", "services"]) });
-    return "Vendor added.";
+    const f = fields(form, ["name", "contact", "phone", "email", "services", "store_id"]);
+    await post("/console/vendors", { actor, ...f });
+    return f.store_id ? "Vendor added for that store. Upload its COI, then approve it." : "Vendor added.";
+  });
+}
+
+export async function editVendor(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(async (actor) => {
+    const { id, ...rest } = fields(form, ["id", "name", "contact", "phone", "email", "services"]);
+    const result = await post<{ status: string }>(`/console/vendors/${id}`, { actor, ...rest });
+    return result.status === "unchanged" ? "Nothing changed." : "Vendor saved.";
+  });
+}
+
+// A store starting to use an established vendor: it then needs that store's
+// COI and an approval, the same as a new vendor.
+export async function addVendorStore(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(async (actor) => {
+    const { vendor_id, store_id } = fields(form, ["vendor_id", "store_id"]);
+    if (!vendor_id) throw new Error("Choose the vendor.");
+    if (!store_id) throw new Error("Choose the store.");
+    await post(`/console/vendors/${vendor_id}/stores`, { actor, store_id });
+    return "Added. Upload that store's certificate of insurance, then approve it.";
+  });
+}
+
+export async function approveVendorStore(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(async (actor) => {
+    const { vendor_id, store_id } = fields(form, ["vendor_id", "store_id"]);
+    const approved = form.get("approved") !== "false";
+    await post(`/console/vendors/${vendor_id}/stores/${store_id}/approve`, { actor, approved });
+    return approved ? "Approved for that store." : "Approval removed for that store.";
   });
 }
 
 export async function uploadCoi(_: ActionState, form: FormData): Promise<ActionState> {
   return run(async (actor) => {
-    const { vendor_id, expiration } = fields(form, ["vendor_id", "expiration"]);
+    const { vendor_id, expiration, store_id } = fields(form, ["vendor_id", "expiration", "store_id"]);
     const file = fileFrom(form);
     if (!vendor_id) throw new Error("Choose the vendor.");
     if (!expiration) throw new Error("Enter the expiration date from the certificate.");
@@ -202,6 +241,7 @@ export async function uploadCoi(_: ActionState, form: FormData): Promise<ActionS
     const body = new FormData();
     body.set("expiration", expiration);
     body.set("actor", actor);
+    body.set("store_id", store_id);
     body.set("file", file, file.name);
     const result = await post<{ expired: boolean }>(`/console/vendors/${vendor_id}/coi`, body);
     return result.expired

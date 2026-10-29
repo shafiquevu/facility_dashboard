@@ -68,7 +68,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
 
       <Section
         title={<>Inspections waiting for a due date<Count n={imported.length} /></>}
-        description="Imported from the facility workbook. Set the date each inspection is due and who is responsible, then start it: they are reminded 30, 14 and 7 days before the due date and on the day. Nothing is sent until then."
+        description="Imported from the facility workbook. Add any past inspections first if you have them, then set the date each one is due and start it. The store's service manager is responsible unless you pick someone else, and is reminded 60, 30, 14 and 7 days before the due date and on the day. Nothing is sent until then."
         flush
       >
         {imported.length ? (

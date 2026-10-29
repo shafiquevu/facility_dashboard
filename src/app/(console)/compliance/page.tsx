@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { ExternalLink } from "lucide-react";
-import { get, type CoiStatus, type ComplianceVendor } from "@/lib/api";
+import { get, type CoiStatus, type ComplianceVendor, type Meta } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { day, storeLabel } from "@/lib/format";
 import { access, attempt, one, withStore, type SearchParams } from "@/lib/page";
@@ -30,11 +30,15 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const store = one(params.store);
   const status = one(params.status) as CoiStatus | "";
-  const result = await attempt(() =>
-    get<{ vendors: ComplianceVendor[]; counts: Record<CoiStatus, number> }>("/console/compliance", { store }),
-  );
+  const result = await attempt(async () => {
+    const [compliance, meta] = await Promise.all([
+      get<{ vendors: ComplianceVendor[]; counts: Record<CoiStatus, number> }>("/console/compliance", { store }),
+      get<Meta>("/console/meta"),
+    ]);
+    return { ...compliance, stores: meta.stores };
+  });
   if (result.error !== null) return <ErrorState message={result.error} />;
-  const { vendors, counts } = result.data;
+  const { vendors, counts, stores } = result.data;
   const shown = status ? vendors.filter((v) => v.coi_status === status) : vendors;
   const cleared = vendors.filter((v) => v.cleared).length;
 
@@ -66,8 +70,8 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
         </div>
       </section>
 
-      <Section title="Upload a certificate" description="A renewal is added as a new certificate. The old one stays on file as the record of past cover.">
-        <CoiUploadForm vendors={[...vendors].sort((a, b) => a.name.localeCompare(b.name)).map((v) => ({ id: v.id, name: v.name }))} />
+      <Section title="Upload a certificate" description="Choose the store it covers: COIs are usually issued per location. A renewal is added as a new certificate; the old one stays on file as the record of past cover. Approve the vendor for that store on the Vendors page.">
+        <CoiUploadForm vendors={[...vendors].sort((a, b) => a.name.localeCompare(b.name)).map((v) => ({ id: v.id, name: v.name }))} stores={stores} />
       </Section>
 
       <Section flush>

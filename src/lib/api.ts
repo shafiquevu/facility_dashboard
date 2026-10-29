@@ -36,7 +36,15 @@ export type WorkOrder = {
   overdue: boolean;
   due_today: boolean;
   days_until_due: number | null;
+  // Where the current inspection is (Kelly, 29 Oct). Null for repairs.
+  stage: Stage | null;
+  scheduled_for: string | null;
+  service_manager: string | null;
+  service_manager_id: string | null;
+  live?: boolean;
 };
+
+export type Stage = "needs_date" | "waiting" | "due" | "scheduled" | "report_in" | "verified" | "failed";
 
 export type Document = { id: string; kind: string; url: string | null; uploaded_by: string | null; uploaded_at: string };
 export type HistoryEntry = { occurred_at: string; verb: string; actor: string | null; detail: Record<string, unknown> };
@@ -56,7 +64,8 @@ export type WorkOrderDetail = WorkOrder & {
   documents: Document[];
   records?: InspectionRecord[];
   assignee_id?: string | null;
-  live?: boolean;
+  scheduled_by?: string | null;
+  scheduled_at?: string | null;
   history: HistoryEntry[];
   recommendations: RecommendationRow[];
   proof_link: string | null;
@@ -78,6 +87,15 @@ export type ComplianceVendor = {
   services: string[]; approved: boolean; approved_by: string | null; approved_on: string | null;
   cover_until: string | null; uploaded_at: string | null; stores: string[]; store_codes: string[];
   item_count: number; coi_status: CoiStatus; coi_url: string | null; cleared: boolean;
+  locations: VendorStore[]; cleared_stores: string[];
+};
+
+// One vendor at one store: its own COI and its own approval (0015).
+export type VendorStore = {
+  store_id: string; store: string; store_code: string; requested_by: string; requested_at: string;
+  approved_by: string | null; approved_on: string | null; coi_until: string | null;
+  coi_for_this_store: boolean | null; coi_status: CoiStatus; coi_url: string | null;
+  approved: boolean; cleared: boolean;
 };
 
 export type AssetStatus = "overdue" | "due_soon" | "on_track" | "no_schedule";
@@ -98,6 +116,7 @@ export type ActivityEvent = {
 export type CalendarEvent = {
   date: string; kind: "item" | "request" | "asset"; id: string; number: string | null;
   title: string; store: string; category: string; critical: boolean; state: string; overdue: boolean;
+  vendor?: string | null; building?: string; due?: string | null; assigned_to?: string | null;
 };
 
 export type Kpis = {

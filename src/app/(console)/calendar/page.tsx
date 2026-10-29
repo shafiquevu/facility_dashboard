@@ -24,8 +24,6 @@ export default function CalendarPage({ searchParams }: { searchParams: SearchPar
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 function chip(e: CalendarEvent) {
-  if (e.overdue) return "bg-overdue-tint text-overdue";
-  if (e.kind === "asset") return "bg-awaiting-tint text-awaiting";
   if (e.critical) return "bg-soon-tint text-soon";
   return "bg-brand-tint text-brand";
 }
@@ -69,7 +67,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
     <>
       <PageHeader
         title={title}
-        description={`${inMonth} open item${inMonth === 1 ? "" : "s"} due this month, by due date`}
+        description={`${inMonth} scheduled visit${inMonth === 1 ? "" : "s"} this month. Due dates and reminders stay on each inspection.`}
         actions={
           <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" asChild><Link href={monthHref(-1)} aria-label="Previous month"><ChevronLeft /></Link></Button>
@@ -98,10 +96,11 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                       <li key={`${e.kind}-${e.id}`}>
                         <Link
                           href={e.kind === "asset" ? withStore("/assets", store) : workOrderHref({ kind: e.kind, id: e.id })}
-                          title={`${e.title}, ${storeLabel(e.store)}`}
+                          title={`${e.title}, ${storeLabel(e.store)}${e.vendor ? `, ${e.vendor}` : ""}${e.assigned_to ? `. With ${e.assigned_to}` : ""}`}
                           className={cn("block truncate rounded px-1.5 py-0.5 text-[11px] font-medium hover:brightness-95", chip(e))}
                         >
                           {e.title}
+                          <span className="block truncate font-normal opacity-80">{storeLabel(e.store)}{e.vendor ? ` · ${e.vendor}` : ""}</span>
                         </Link>
                       </li>
                     ))}
@@ -113,7 +112,8 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
           </div>
         </div>
         <div className="flex flex-wrap gap-5 px-5 py-3 text-xs text-graphite">
-          {[["bg-brand", "Work order"], ["bg-soon", "Critical inspection"], ["bg-awaiting", "Equipment service"], ["bg-overdue", "Overdue"]].map(([dot, label]) => (
+          <span>Only booked visits show here. Book one from the inspection&apos;s page, under Scheduled visit.</span>
+          {[["bg-brand", "Inspection"], ["bg-soon", "Critical inspection"]].map(([dot, label]) => (
             <span key={label} className="inline-flex items-center gap-1.5"><span className={cn("size-2 rounded-full", dot)} />{label}</span>
           ))}
         </div>

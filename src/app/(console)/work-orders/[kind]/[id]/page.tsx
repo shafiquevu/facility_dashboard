@@ -7,7 +7,45 @@ import { dateTime, day, dueLabel, money, verb, words } from "@/lib/format";
 import { access, attempt } from "@/lib/page";
 import { NoAccess } from "@/components/no-access";
 import { Chip, Empty, ErrorState, Loading, PriorityLabel, Section, WorkOrderStatus } from "@/components/kit";
-import { AssignForm, AttachReportForm, CopyLink, DecisionForm, RecordInspectionForm, RemoveDocumentForm, RequestUpload, VerifyForm } from "./forms";
+import { AssignForm, AttachReportForm, CopyLink, DecisionForm, RecordInspectionForm, RemoveDocumentForm, RequestUpload, ScheduleForm, VerifyForm } from "./forms";
+import type { Stage } from "@/lib/api";
+
+// Kelly's steps for the current inspection (29 Oct).
+const STEPS: [Stage, string][] = [
+  ["waiting", "Waiting"], ["due", "Due"], ["scheduled", "Scheduled"], ["report_in", "Report in"], ["verified", "Verified"],
+];
+
+function StageBar({ stage, due, scheduled }: { stage: Stage; due: string | null; scheduled: string | null }) {
+  if (stage === "needs_date") {
+    return (
+      <div role="note" className="mb-5 rounded-xl border border-line bg-surface-sunk px-5 py-3 text-[13px] text-graphite">
+        <span className="font-semibold text-ink">Needs a due date.</span> Add its past inspections below, then set the due date and who is responsible in Approvals.
+      </div>
+    );
+  }
+  const at = stage === "failed" ? 3 : STEPS.findIndex(([k]) => k === stage);
+  const note: Partial<Record<Stage, string>> = {
+    waiting: "More than 60 days before it is due. Nothing to do yet.",
+    due: `Due ${day(due)}. Book the vendor's visit.`,
+    scheduled: `Visit booked for ${day(scheduled)}. Next, the report.`,
+    report_in: "The report is in. Check it and verify.",
+    verified: "Verified complete for this cycle.",
+    failed: "Failed. A repair and a re-inspection are needed before it can close.",
+  };
+  return (
+    <section className="panel mb-5 px-5 py-4" aria-label="Where this inspection is">
+      <ol className="grid grid-cols-5 gap-1.5">
+        {STEPS.map(([key, label], i) => (
+          <li key={key} className="min-w-0">
+            <span className={`block h-1.5 rounded-full ${i < at ? "bg-verified" : i === at ? (stage === "failed" ? "bg-overdue" : "bg-brand") : "bg-line"}`} />
+            <span className={`mt-1.5 block truncate text-xs ${i === at ? "font-semibold text-ink" : "text-graphite"}`}>{label}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 text-[13px] text-graphite">{note[stage]}</p>
+    </section>
+  );
+}
 
 export default function WorkOrderPage({ params }: { params: Promise<{ kind: string; id: string }> }) {
   return (
@@ -38,7 +76,11 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
   const facts: [string, React.ReactNode][] = [
     ["Location", <>{o.store}<span className="block text-xs text-graphite">{o.building}</span></>],
     ["Due", <>{day(o.due, "No due date")}{o.state !== "complete" && o.due && <span className={`block text-xs ${o.overdue ? "text-overdue" : "text-graphite"}`}>{dueLabel(o.days_until_due)}</span>}</>],
+    ...(o.kind === "item"
+      ? ([["Scheduled visit", o.scheduled_for ? <>{day(o.scheduled_for)}{o.scheduled_by && <span className="block text-xs text-graphite">booked by {o.scheduled_by}</span>}</> : <span className="text-faint">Not booked</span>]] as [string, React.ReactNode][])
+      : []),
     ["Assigned to", o.assigned_to ?? <span className="text-faint">Nobody</span>],
+    ["Service manager", o.service_manager ?? <span className="text-faint">None set</span>],
     ["Vendor", o.vendor ?? <span className="text-faint">None</span>],
     ["Priority", <PriorityLabel key="p" priority={o.priority} />],
     ["Result", words(o.result)],
@@ -78,6 +120,8 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
         </div>
       </header>
 
+      {o.kind === "item" && o.stage && <StageBar stage={o.stage} due={o.due} scheduled={o.scheduled_for} />}
+
       {o.failure_reason && (
         <div role="note" className="mb-5 rounded-xl border border-overdue/25 bg-overdue-tint px-5 py-3 text-[13px] text-overdue">
           <span className="font-semibold">Sent back or failed:</span> {o.failure_reason}
@@ -98,20 +142,29 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
           {o.kind === "item" && (
             <Section
               title="Inspection history"
-              description="Past inspections and their reports, kept for reference. Record this year's here, with the PDF."
+              description="Every past inspection and its report. Open one to see everything recorded with it. Add older ones below, with the PDF."
               flush
             >
               {o.records?.length ? (
                 <ul className="divide-y divide-line border-t border-line">
                   {o.records.map((r) => (
-                    <li key={r.id} className="px-5 py-3.5">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <li key={r.id}>
+                      <details className="group px-5 py-3.5">
+                      <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2">
+                        <ChevronRight className="size-3.5 text-faint transition-transform group-open:rotate-90" />
                         <span className="num text-[14px] font-semibold text-ink">{day(r.completed_on)}</span>
                         <Chip tone={r.result === "failed" ? "overdue" : r.result === "passed" ? "verified" : "soon"}>{words(r.result)}</Chip>
                         {r.vendor && <span className="text-[13px] text-graphite">{r.vendor}</span>}
-                      </div>
-                      {r.notes && <p className="mt-1 text-[13px] whitespace-pre-line text-ink">{r.notes}</p>}
-                      <p className="mt-1 text-xs text-faint">Recorded by {r.recorded_by}, {dateTime(r.created_at)}</p>
+                        <span className="ml-auto text-xs text-graphite">{r.documents.length ? `${r.documents.length} report${r.documents.length > 1 ? "s" : ""}` : "No report yet"}</span>
+                      </summary>
+                      <dl className="mt-3 grid gap-x-6 gap-y-2 pl-5 text-[13px] sm:grid-cols-2">
+                        <div><dt className="text-xs text-graphite">Done on</dt><dd>{day(r.completed_on)}</dd></div>
+                        <div><dt className="text-xs text-graphite">Result</dt><dd>{words(r.result)}</dd></div>
+                        <div><dt className="text-xs text-graphite">Vendor</dt><dd>{r.vendor ?? "Not recorded"}</dd></div>
+                        <div><dt className="text-xs text-graphite">Recorded by</dt><dd>{r.recorded_by}, {dateTime(r.created_at)}</dd></div>
+                        <div className="sm:col-span-2"><dt className="text-xs text-graphite">Notes</dt><dd className="whitespace-pre-line">{r.notes ?? "None"}</dd></div>
+                      </dl>
+                      <div className="pl-5">
                       {r.documents.length ? (
                         <ul className="mt-2 flex flex-wrap gap-2">
                           {r.documents.map((d, i) => (
@@ -127,6 +180,8 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
                       ) : (
                         <AttachReportForm id={o.id} recordId={r.id} />
                       )}
+                      </div>
+                      </details>
                     </li>
                   ))}
                 </ul>
@@ -207,6 +262,9 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
                   <li key={i} className="relative">
                     <span className="absolute top-1.5 -left-[25px] size-2.5 rounded-full border-2 border-surface bg-brand" aria-hidden="true" />
                     <p className="text-[13px]"><span className="font-medium text-ink">{verb(h.verb)}</span> <span className="text-graphite">by {h.actor ?? "the system"}</span></p>
+                    {["scheduled", "rescheduled", "unscheduled"].includes(h.verb) && (
+                      <p className="text-[13px] text-graphite">{h.detail?.from ? `${day(String(h.detail.from))} → ` : ""}{h.detail?.to ? day(String(h.detail.to)) : "no date"}</p>
+                    )}
                     {typeof (h.detail?.reason ?? h.detail?.note) === "string" && String(h.detail.reason ?? h.detail.note).trim() && (
                       <p className="text-[13px] text-graphite">&ldquo;{String(h.detail.reason ?? h.detail.note)}&rdquo;</p>
                     )}
@@ -228,13 +286,18 @@ async function Content({ params }: { params: Promise<{ kind: string; id: string 
               <VerifyForm kind={o.kind} id={o.id} />
             </section>
           )}
+          {o.kind === "item" && o.live !== false && o.stage !== "verified" && (
+            <Section title="Scheduled visit" description={o.scheduled_for ? `Booked for ${day(o.scheduled_for)}.` : "When the vendor is booked to come. Only booked visits show on the calendar."}>
+              <ScheduleForm id={o.id} scheduled={o.scheduled_for} />
+            </Section>
+          )}
           {o.state !== "complete" && (
             <Section title="Assignment">
               <AssignForm order={o} meta={meta} />
             </Section>
           )}
           {o.proof_link && (
-            <Section title="Completion link" description="The page the vendor or manager uses to upload the report. No login needed. Reminders include it automatically.">
+            <Section title="Completion link" description="For the store's service manager, not the vendor. On it they book or move the visit, upload the report and add past inspections, with no login. Reminders send it to whoever is assigned, or the service manager.">
               <CopyLink url={o.proof_link} />
             </Section>
           )}
