@@ -82,7 +82,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
           ))}
         </section>
 
-        <div className="grid gap-5 2xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <div className="grid gap-5 min-[1800px]:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
           <Section
             title="Compliance by store"
             description="Every inspection on file, by store and type. Select a cell to see the items behind it."
@@ -120,7 +120,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
         </div>
 
         <div className="grid gap-5 xl:grid-cols-2">
-          <Section title="Next two weeks" actions={<TextLink href={s("/calendar")}>Open calendar</TextLink>}>
+          <Section title="Visits in the next two weeks" actions={<TextLink href={s("/calendar")}>Open calendar</TextLink>}>
             {upcoming.length ? (
               <ol className="relative space-y-4 border-l border-line pl-5">
                 {[...byDay.entries()].map(([date, events]) => (
@@ -142,7 +142,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                 ))}
               </ol>
             ) : (
-              <Empty title="Nothing due in the next 14 days" />
+              <Empty title="No visits booked in the next 14 days">Book a visit on an inspection's page and it shows here.</Empty>
             )}
           </Section>
 

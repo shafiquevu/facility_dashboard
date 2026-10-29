@@ -17,7 +17,7 @@ const CELL: Record<GridState, string> = {
 
 const LEGEND: [GridState, string][] = [
   ["overdue", "Overdue"],
-  ["due_soon", "Due within 30 days"],
+  ["due_soon", "Due within 60 days"],
   ["awaiting", "Proof in, to verify"],
   ["ok", "On schedule"],
   ["no_date", "No due date on file"],
@@ -38,10 +38,10 @@ export function ComplianceGrid({ matrix, store }: { matrix: Matrix; store: strin
   return (
     <div>
       <div className="overflow-x-auto px-5">
-        <table className="w-full border-separate border-spacing-1" style={{ minWidth: 140 + matrix.categories.length * 104 }}>
+        <table className="w-full border-separate border-spacing-1" style={{ minWidth: 150 + matrix.categories.length * 92 }}>
           <thead>
             <tr>
-              <th className="w-36" />
+              <th className="sticky left-0 z-10 w-36 bg-surface" />
               {matrix.categories.map((c) => (
                 <th key={c.key} scope="col" className="px-1 pb-1 text-left align-bottom text-xs font-medium text-graphite">
                   {c.label.replace(/ (inspection|test|service|change|system test)$/i, "")}
@@ -53,8 +53,9 @@ export function ComplianceGrid({ matrix, store }: { matrix: Matrix; store: strin
           <tbody>
             {matrix.stores.map((s) => (
               <tr key={s.code}>
-                <th scope="row" className="pr-2 text-left text-[13px] font-medium whitespace-nowrap text-ink">
-                  <Link href={`/?store=${s.code}`} className="hover:text-brand">{storeLabel(s.name)}</Link>
+                {/* Stays in view while the types scroll sideways on a narrow screen. */}
+                <th scope="row" className="sticky left-0 z-10 max-w-40 bg-surface pr-2 text-left text-[13px] font-medium whitespace-nowrap text-ink">
+                  <Link href={`/?store=${s.code}`} className="block truncate hover:text-brand" title={s.name}>{storeLabel(s.name)}</Link>
                 </th>
                 {matrix.categories.map((cat) => {
                   const c = at.get(`${s.code}|${cat.key}`);
